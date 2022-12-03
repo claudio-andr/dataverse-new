@@ -1,20 +1,17 @@
 package edu.harvard.iq.dataverse.authorization.providers.builtin;
 
-import edu.harvard.iq.dataverse.authorization.AuthenticationProviderDisplayInfo;
-import edu.harvard.iq.dataverse.authorization.AuthenticationRequest;
-import edu.harvard.iq.dataverse.authorization.AuthenticationResponse;
-import edu.harvard.iq.dataverse.authorization.AuthenticationServiceBean;
-import edu.harvard.iq.dataverse.authorization.CredentialsAuthenticationProvider;
+import edu.harvard.iq.dataverse.authorization.*;
+
 import java.util.Arrays;
 import java.util.List;
 import edu.harvard.iq.dataverse.authorization.users.AuthenticatedUser;
 import edu.harvard.iq.dataverse.util.BundleUtil;
+import edu.harvard.iq.dataverse.util.RestUsachConectorServicesUtil;
 import edu.harvard.iq.dataverse.validation.PasswordValidatorServiceBean;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
@@ -104,6 +101,7 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
     public AuthenticationResponse authenticate( AuthenticationRequest authReq ) {
         BuiltinUser u = bean.findByUserName(authReq.getCredential(KEY_USERNAME_OR_EMAIL) );
         AuthenticatedUser authUser = null;
+        RestUsachConectorServicesUtil utilRestConector = new RestUsachConectorServicesUtil();
 
         if(u == null) { //If can't find by username in builtin, get the auth user and then the builtin
             authUser = authBean.getAuthenticatedUserByEmail(authReq.getCredential(KEY_USERNAME_OR_EMAIL));
@@ -119,13 +117,40 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
         //boolean userAuthenticated = PasswordEncryption.getVersion(u.getPasswordEncryptionVersion())
         //                                    .check(authReq.getCredential(KEY_PASSWORD), u.getEncryptedPassword() );
 
+        //comentado por cambio de metodo a utileria de servicios de usach que se conectan por REST
+        /*
         boolean userAuthenticated = Boolean.FALSE;
-
         userAuthenticated = autenticatedLdap(authReq.getCredential(KEY_USERNAME_OR_EMAIL), authReq.getCredential(KEY_PASSWORD));
+        if ( ! userAuthenticated ) {
+            return AuthenticationResponse.makeFail("Bad username or password");
+        }
+        */
+
+        // codigo generado para autenticar con ldap, tomar la respuesta e ir por los datos del academico
+        boolean userAuthenticated = Boolean.FALSE;
+        LdapUsachResponse response = utilRestConector.autenticatedLdap(authReq.getCredential(KEY_USERNAME_OR_EMAIL), authReq.getCredential(KEY_PASSWORD));
+        userAuthenticated = response.getSuccess();
 
         if ( ! userAuthenticated ) {
             return AuthenticationResponse.makeFail("Bad username or password");
         }
+
+        //verificar si el rut viene con dv y guion o solo rutdv sin guion para sacar el rut sin dv
+        String run = response.getData().getRut();
+        AcademicoUsachResponse registroAcademico = utilRestConector.apiAcademico(run);
+
+        if(registroAcademico.getPlanta() == null || (!"ACADEMICOS".equalsIgnoreCase(registroAcademico.getPlanta().toUpperCase()))){
+            return AuthenticationResponse.makeFail("Access not alowed for user");
+        }
+
+        //verificando si el usuario tiene o no afiliacion
+        if (u.getAffiliation() == null){
+            bean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
+        }else if(!u.getAffiliation().equalsIgnoreCase(registroAcademico.getCodigoUnidadMayorContrato())){
+            return AuthenticationResponse.makeFail("Afiliacion invalida");
+        }
+
+        // sin el usuario no teine configurada su afiliacion se asigna la que serponde el apiacademico,
 
         /* comentado para cambio de validacion de usuario
         if ( u.getPasswordEncryptionVersion() < PasswordEncryption.getLatestVersionNumber() ) {
