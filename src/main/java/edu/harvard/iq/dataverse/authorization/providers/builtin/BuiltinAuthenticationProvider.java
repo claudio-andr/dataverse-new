@@ -145,7 +145,7 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
 
         //verificando si el usuario tiene o no afiliacion
         if (u.getAffiliation() == null){
-            bean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
+            authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
         }else if(!u.getAffiliation().equalsIgnoreCase(registroAcademico.getCodigoUnidadMayorContrato())){
             return AuthenticationResponse.makeFail("Afiliacion invalida");
         }

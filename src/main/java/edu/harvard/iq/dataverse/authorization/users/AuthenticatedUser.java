@@ -68,8 +68,9 @@ import org.hibernate.validator.constraints.NotBlank;
     @NamedQuery( name="AuthenticatedUser.findAdminUser",
                 query="select au from AuthenticatedUser au WHERE "
                         + "au.superuser = true "
-                        + "order by au.id")
-    
+                        + "order by au.id"),
+    @NamedQuery( name="AuthenticatedUser.updateAffiliationForUserByName",
+                query = "UPDATE AuthenticatedUser au SET au.affiliation = :affiliation WHERE LOWER(au.userIdentifier)=LOWER(:userName)")
 })
 @Entity
 public class AuthenticatedUser implements User, Serializable {

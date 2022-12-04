@@ -940,4 +940,20 @@ public class AuthenticationServiceBean {
         return query.getResultList();
     }
 
+    public Integer updateAffiliationForUserByName(String affiliation, String userName) {
+        try {
+            int exito = em.createNamedQuery("AuthenticatedUser.updateAffiliationForUserByName", AuthenticatedUser.class)
+                    .setParameter("affiliation", affiliation)
+                    .setParameter("userName", userName)
+                    .executeUpdate();
+
+            return exito;
+
+        } catch (javax.persistence.NoResultException e) {
+            return 0;
+        } catch (NonUniqueResultException ex) {
+            logger.log(Level.WARNING, "multiple accounts found for username {0}", userName);
+            return null;
+        }
+    }
 }

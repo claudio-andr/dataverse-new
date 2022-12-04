@@ -31,9 +31,7 @@ import javax.validation.constraints.Size;
 		@NamedQuery( name="BuiltinUser.findByUserName",
 				query = "SELECT u FROM BuiltinUser u WHERE LOWER(u.userName)=LOWER(:userName)"),
 		@NamedQuery( name="BuiltinUser.listByUserNameLike",
-				query = "SELECT u FROM BuiltinUser u WHERE u.userName LIKE :userNameLike"),
-        @NamedQuery( name="BuiltinUser.updateAffiliationForUserByName",
-                query = "UPDATE BuiltinUser u SET u.affiliation = :affiliation WHERE LOWER(u.userName)=LOWER(:userName)")
+				query = "SELECT u FROM BuiltinUser u WHERE u.userName LIKE :userNameLike")
 })
 @Entity
 @Table(indexes = {@Index(columnList="userName")})  // for sorting the NamedQuery BuiltinUser.findAll
