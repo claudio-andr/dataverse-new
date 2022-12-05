@@ -30,6 +30,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Logger;
 import java.util.Base64;
+import com.google.gson.*;
 
 import static edu.harvard.iq.dataverse.datasetutility.FileSizeChecker.bytesToHumanReadable;
 
@@ -75,7 +77,7 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
             int statusCode = response.getStatusLine().getStatusCode();
 
             if (statusCode == 200) {
-                responseLdap = parseToLdapObject(response.getEntity().getContent());
+                responseLdap = parseGsonToLdapObject(EntityUtils.toString(response.getEntity()));
                 responseLdap.setSuccess(Boolean.TRUE);
             }else{
                 responseLdap = new LdapUsachResponse();
@@ -101,7 +103,8 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
 
         try{
             //Define a postRequest request
-            HttpGet getRequest = new HttpGet("https://api.dti.usach.cl/api/docente/"+run);
+            //HttpGet getRequest = new HttpGet("https://api.dti.usach.cl/api/docente/"+run);
+            HttpGet getRequest = new HttpGet("https://run.mocky.io/v3/9b0ccf66-5aed-4997-898f-8515ff504104");
 
             //Set the API media type in http content-type header
             getRequest.addHeader("content-type", "application/json");
@@ -114,7 +117,7 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
             int statusCode = response.getStatusLine().getStatusCode();
 
             if (statusCode == 200) {
-                responseAcademico = parseToAcademicoObject(response.getEntity().getContent());
+                responseAcademico = parseGsonToAcademicoObject(EntityUtils.toString(response.getEntity()));
             }
 
         }catch(Exception e){
@@ -130,6 +133,21 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
     private String getBasicAuthenticationHeader(String username, String password) {
         String valueToEncode = username + ":" + password;
         return "Basic " + Base64.getEncoder().encodeToString(valueToEncode.getBytes());
+    }
+
+    private AcademicoUsachResponse parseGsonToAcademicoObject(String response) throws IOException {
+
+        Gson gson = new Gson();
+        AcademicoUsachResponse record = gson.fromJson(response, AcademicoUsachResponse.class);
+
+        return record;
+    }
+    private LdapUsachResponse parseGsonToLdapObject(String response) throws IOException {
+
+        Gson gson = new Gson();
+        LdapUsachResponse record = gson.fromJson(response , LdapUsachResponse.class);
+
+        return record;
     }
 
     private AcademicoUsachResponse parseToAcademicoObject( InputStream response) throws IOException {

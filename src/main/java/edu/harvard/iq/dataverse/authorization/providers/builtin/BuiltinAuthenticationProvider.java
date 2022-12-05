@@ -126,28 +126,33 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
         }
         */
 
-        // codigo generado para autenticar con ldap, tomar la respuesta e ir por los datos del academico
-        boolean userAuthenticated = Boolean.FALSE;
-        LdapUsachResponse response = utilRestConector.autenticatedLdap(authReq.getCredential(KEY_USERNAME_OR_EMAIL), authReq.getCredential(KEY_PASSWORD));
-        userAuthenticated = response.getSuccess();
+        authUser = authBean.getAuthenticatedUser(authReq.getCredential(KEY_USERNAME_OR_EMAIL));
 
-        if ( ! userAuthenticated ) {
-            return AuthenticationResponse.makeFail("Bad username or password");
-        }
+        if(!authUser.isSuperuser()) {
 
-        //verificar si el rut viene con dv y guion o solo rutdv sin guion para sacar el rut sin dv
-        String run = response.getData().getRut();
-        AcademicoUsachResponse registroAcademico = utilRestConector.apiAcademico(run);
+            // codigo generado para autenticar con ldap, tomar la respuesta e ir por los datos del academico
+            boolean userAuthenticated = Boolean.FALSE;
+            LdapUsachResponse response = utilRestConector.autenticatedLdap(authReq.getCredential(KEY_USERNAME_OR_EMAIL), authReq.getCredential(KEY_PASSWORD));
+            userAuthenticated = response.getSuccess();
 
-        if(registroAcademico.getPlanta() == null || (!"ACADEMICOS".equalsIgnoreCase(registroAcademico.getPlanta().toUpperCase()))){
-            return AuthenticationResponse.makeFail("Access not alowed for user");
-        }
+            if (!userAuthenticated) {
+                return AuthenticationResponse.makeFail("Bad username or password");
+            }
 
-        //verificando si el usuario tiene o no afiliacion
-        if (u.getAffiliation() == null){
-            authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
-        }else if(!u.getAffiliation().equalsIgnoreCase(registroAcademico.getCodigoUnidadMayorContrato())){
-            return AuthenticationResponse.makeFail("Afiliacion invalida");
+            //verificar si el rut viene con dv y guion o solo rutdv sin guion para sacar el rut sin dv
+            String run = response.getData().getRut();
+            AcademicoUsachResponse registroAcademico = utilRestConector.apiAcademico(run);
+
+            if (registroAcademico.getPlanta() == null || (!"ACADEMICOS".equalsIgnoreCase(registroAcademico.getPlanta().toUpperCase()))) {
+                return AuthenticationResponse.makeFail("Access not alowed for user");
+            }
+
+            //verificando si el usuario tiene o no afiliacion
+            if (u.getAffiliation() == null) {
+                authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
+            } else if (!u.getAffiliation().equalsIgnoreCase(registroAcademico.getCodigoUnidadMayorContrato())) {
+                return AuthenticationResponse.makeFail("Afiliacion invalida");
+            }
         }
 
         // sin el usuario no teine configurada su afiliacion se asigna la que serponde el apiacademico,
