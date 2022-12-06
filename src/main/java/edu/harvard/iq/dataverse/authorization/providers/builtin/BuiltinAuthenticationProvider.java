@@ -148,10 +148,8 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
             }
 
             //verificando si el usuario tiene o no afiliacion
-            if (u.getAffiliation() == null) {
+            if (authUser.getAffiliation() == null || !registroAcademico.getCodigoUnidadMayorContrato().equalsIgnoreCase(authUser.getAffiliation())) {
                 authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
-            } else if (!u.getAffiliation().equalsIgnoreCase(registroAcademico.getCodigoUnidadMayorContrato())) {
-                return AuthenticationResponse.makeFail("Afiliacion invalida");
             }
         }
 
