@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.authorization.providers.oauth2;
 
+import edu.harvard.iq.dataverse.DataverseServiceBean;
 import edu.harvard.iq.dataverse.DataverseSession;
 import edu.harvard.iq.dataverse.validation.EMailValidator;
 import edu.harvard.iq.dataverse.UserNotification;
@@ -72,6 +73,9 @@ public class OAuth2FirstLoginPage implements java.io.Serializable {
     
     @Inject
     DataverseSession session;
+
+    @EJB
+    DataverseServiceBean dataverseServiceBean;
 
     OAuth2UserRecord newUser;
 
@@ -202,7 +206,10 @@ public class OAuth2FirstLoginPage implements java.io.Serializable {
     }
 
     public String convertExistingAccount() {
-        BuiltinAuthenticationProvider biap = new BuiltinAuthenticationProvider(builtinUserSvc, passwordValidatorService, authenticationSvc);
+        //linea ocmentada por cambio en constructor
+        //BuiltinAuthenticationProvider biap = new BuiltinAuthenticationProvider(builtinUserSvc, passwordValidatorService, authenticationSvc);
+        BuiltinAuthenticationProvider biap = new BuiltinAuthenticationProvider(builtinUserSvc, passwordValidatorService, authenticationSvc, dataverseServiceBean);
+
         AuthenticationRequest auReq = new AuthenticationRequest();
         final List<CredentialsAuthenticationProvider.Credential> creds = biap.getRequiredCredentials();
         auReq.putCredential(creds.get(0).getKey(), getUsername());

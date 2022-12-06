@@ -5,6 +5,7 @@
  */
 package edu.harvard.iq.dataverse.authorization;
 
+import edu.harvard.iq.dataverse.DataverseServiceBean;
 import edu.harvard.iq.dataverse.actionlogging.ActionLogRecord;
 import edu.harvard.iq.dataverse.actionlogging.ActionLogServiceBean;
 import edu.harvard.iq.dataverse.authorization.exceptions.AuthenticationProviderFactoryNotFoundException;
@@ -60,7 +61,10 @@ public class AuthenticationProvidersRegistrationServiceBean {
     
     @EJB
     AuthenticationServiceBean authenticationService;
-    
+
+    @EJB
+    DataverseServiceBean dataverseServiceBean;
+
     /**
      * The maps below (the objects themselves) are "final", but the
      * values will be populated in @PostConstruct (see below) during 
@@ -99,7 +103,9 @@ public class AuthenticationProvidersRegistrationServiceBean {
             // using @AutoService - similiarly how we are using with the 
             // metadata Exporter classes. (may not necessarily be possible, or 
             // easy; hence "consider" -- L.A.)
-            registerProviderFactory( new BuiltinAuthenticationProviderFactory(builtinUserServiceBean, passwordValidatorService, authenticationService) );
+            //comentado por cambio en consturctoir
+            //registerProviderFactory( new BuiltinAuthenticationProviderFactory(builtinUserServiceBean, passwordValidatorService, authenticationService) );
+            registerProviderFactory( new BuiltinAuthenticationProviderFactory(builtinUserServiceBean, passwordValidatorService, authenticationService, dataverseServiceBean) );
             registerProviderFactory( new ShibAuthenticationProviderFactory() );
             registerProviderFactory( new OAuth2AuthenticationProviderFactory() );
             registerProviderFactory( new OIDCAuthenticationProviderFactory() );

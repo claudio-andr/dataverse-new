@@ -1,5 +1,7 @@
 package edu.harvard.iq.dataverse.authorization.providers.builtin;
 
+import edu.harvard.iq.dataverse.Dataverse;
+import edu.harvard.iq.dataverse.DataverseServiceBean;
 import edu.harvard.iq.dataverse.authorization.*;
 
 import java.util.Arrays;
@@ -35,12 +37,21 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
 
     final BuiltinUserServiceBean bean;
     final AuthenticationServiceBean authBean;
+    DataverseServiceBean dataverseService;
     private PasswordValidatorServiceBean passwordValidatorService;
 
     public BuiltinAuthenticationProvider( BuiltinUserServiceBean aBean, PasswordValidatorServiceBean passwordValidatorService, AuthenticationServiceBean auBean  ) {
         this.bean = aBean;
         this.authBean = auBean;
         this.passwordValidatorService = passwordValidatorService;
+        CREDENTIALS_LIST = Arrays.asList(new Credential(KEY_USERNAME_OR_EMAIL), new Credential(KEY_PASSWORD, true));
+    }
+
+    public BuiltinAuthenticationProvider( BuiltinUserServiceBean aBean, PasswordValidatorServiceBean passwordValidatorService, AuthenticationServiceBean auBean , DataverseServiceBean dataverseService ) {
+        this.bean = aBean;
+        this.authBean = auBean;
+        this.passwordValidatorService = passwordValidatorService;
+        this.dataverseService = dataverseService;
         CREDENTIALS_LIST = Arrays.asList(new Credential(KEY_USERNAME_OR_EMAIL), new Credential(KEY_PASSWORD, true));
     }
 
@@ -152,10 +163,16 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
                 authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
             }
 
-
             //1.- ir porl el dataverse
             Long dvId = 0L;
             //dvId = findDvIdByAffiliation(String addiliarion);
+            List<Dataverse> lista =dataverseService.filterByAliasQuery(registroAcademico.getCodigoUnidadMayorContrato());
+
+            if (lista == null || lista.size()==0) {
+                return AuthenticationResponse.makeFail("Access not alowed for user, dataverse not found");
+            }
+            Dataverse dvRecord = lista.get(0);
+            dvId = dvRecord.getId();
 
             if (dvId == -1L) {
                 return AuthenticationResponse.makeFail("Access not alowed for user, dataverse not found");

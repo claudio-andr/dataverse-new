@@ -1,5 +1,6 @@
 package edu.harvard.iq.dataverse.authorization.providers.builtin;
 
+import edu.harvard.iq.dataverse.DataverseServiceBean;
 import edu.harvard.iq.dataverse.authorization.AuthenticationProvider;
 import edu.harvard.iq.dataverse.authorization.AuthenticationServiceBean;
 import edu.harvard.iq.dataverse.authorization.exceptions.AuthorizationSetupException;
@@ -20,7 +21,10 @@ public class BuiltinAuthenticationProviderFactory implements AuthenticationProvi
     public BuiltinAuthenticationProviderFactory(BuiltinUserServiceBean busBean, PasswordValidatorServiceBean passwordValidatorService, AuthenticationServiceBean authBean ) {
         provider = new BuiltinAuthenticationProvider(busBean, passwordValidatorService, authBean);
     }
-    
+
+    public BuiltinAuthenticationProviderFactory(BuiltinUserServiceBean busBean, PasswordValidatorServiceBean passwordValidatorService, AuthenticationServiceBean authBean, DataverseServiceBean dataverseServiceBean) {
+        provider = new BuiltinAuthenticationProvider(busBean, passwordValidatorService, authBean, dataverseServiceBean);
+    }
     @Override
     public String getAlias() {
         return "BuiltinAuthenticationProvider";

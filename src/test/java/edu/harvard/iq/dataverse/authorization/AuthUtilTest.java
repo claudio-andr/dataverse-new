@@ -77,7 +77,12 @@ public class AuthUtilTest {
             assertEquals(true, AuthUtil.isNonLocalLoginEnabled(manyNonLocal));
 
             Collection<AuthenticationProvider> onlyBuiltin = new HashSet<>();
-            onlyBuiltin.add(new BuiltinAuthenticationProvider(null, null, null));
+            // liena comentada por cmabio en construcctor
+            //onlyBuiltin.add(new BuiltinAuthenticationProvider(null, null, null));
+
+            // nuevo consturctor fecibe parametro adicionmal
+            onlyBuiltin.add(new BuiltinAuthenticationProvider(null, null, null, null));
+
             // only builtin provider
             assertEquals(false, AuthUtil.isNonLocalLoginEnabled(onlyBuiltin));
 
