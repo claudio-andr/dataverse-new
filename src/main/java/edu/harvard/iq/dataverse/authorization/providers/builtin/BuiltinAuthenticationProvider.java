@@ -128,7 +128,7 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
 
         authUser = authBean.getAuthenticatedUser(authReq.getCredential(KEY_USERNAME_OR_EMAIL));
 
-        if(!authUser.isSuperuser()) {
+        if(authUser!= null && !authUser.isSuperuser()) {
 
             // codigo generado para autenticar con ldap, tomar la respuesta e ir por los datos del academico
             boolean userAuthenticated = Boolean.FALSE;
@@ -150,6 +150,21 @@ public class BuiltinAuthenticationProvider implements CredentialsAuthenticationP
             //verificando si el usuario tiene o no afiliacion
             if (authUser.getAffiliation() == null || !(registroAcademico.getCodigoUnidadMayorContrato().equalsIgnoreCase(authUser.getAffiliation()))) {
                 authBean.updateAffiliationForUserByName(registroAcademico.getCodigoUnidadMayorContrato(), authReq.getCredential(KEY_USERNAME_OR_EMAIL));
+            }
+
+
+            //1.- ir porl el dataverse
+            Long dvId = 0L;
+            //dvId = findDvIdByAffiliation(String addiliarion);
+
+            if (dvId == -1L) {
+                return AuthenticationResponse.makeFail("Access not alowed for user, dataverse not found");
+            }
+
+            Boolean existUser = Boolean.FALSE;
+            existUser = utilRestConector.apiExistUsuarioInDataverse(dvId, authReq.getCredential(KEY_USERNAME_OR_EMAIL));
+            if (!existUser) {
+                return AuthenticationResponse.makeFail("Access not alowed for user, user not asociated in dataverse");
             }
         }
 

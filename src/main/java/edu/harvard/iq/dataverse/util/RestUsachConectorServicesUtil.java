@@ -21,9 +21,7 @@
 package edu.harvard.iq.dataverse.util;
 
 
-import edu.harvard.iq.dataverse.authorization.AcademicoUsachResponse;
-import edu.harvard.iq.dataverse.authorization.LdapUsachResponse;
-import edu.harvard.iq.dataverse.authorization.UserUsach;
+import edu.harvard.iq.dataverse.authorization.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -37,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.Base64;
 import com.google.gson.*;
@@ -150,50 +149,65 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
         return record;
     }
 
-    private AcademicoUsachResponse parseToAcademicoObject( InputStream response) throws IOException {
+    private AssigmentsUsachResponse parseGsonToAssigmentsObject(String response) throws IOException {
 
-        AcademicoUsachResponse record = new AcademicoUsachResponse();
-
-        String json = IOUtils.toString(response);
-        JSONArray array = new JSONArray(json);
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject object = array.getJSONObject(i);
-            record.setEmail(object.getString("email"));
-            record.setRun(object.getString("run"));
-            record.setPrimerApellido(object.getString("primerApellido"));
-            record.setSegundoApellido(object.getString("segundoApellido"));
-            record.setNombres(object.getString("nombres"));
-            record.setNombreCentroCostoContrato(object.getString("nombreCentroCostoContrato"));
-            record.setPlanta(object.getString("planta"));
-            record.setCodigoUnidadMayorContrato(object.getString("codigoUnidadMayorContrato"));
-            record.setNombreUnidadMayorContrato(object.getString("nombreUnidadMayorContrato"));
-        }
+        Gson gson = new Gson();
+        AssigmentsUsachResponse record = gson.fromJson(response , AssigmentsUsachResponse.class);
 
         return record;
     }
 
-    private LdapUsachResponse parseToLdapObject( InputStream response) throws IOException {
+    public Boolean apiExistUsuarioInDataverse(Long idDataverse, String usuario){
 
-        LdapUsachResponse record = new LdapUsachResponse();
-        UserUsach data = new  UserUsach();
-        String json = IOUtils.toString(response);
-        JSONArray array = new JSONArray(json);
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject object = array.getJSONObject(i);
-            record.setSuccess(object.getBoolean("success"));
-            record.setMessage(object.getString("message"));
+        Boolean exite = Boolean.FALSE;
+        AssigmentsUsachResponse responseAssigment = null;
 
-            data.setRut(object.getString("rut"));
-            data.setUser(object.getString("user"));
-            data.setTipo(object.getString("tipo"));
-            data.setMessage(object.getString("message"));
-            data.setPassword(object.getString("password"));
-            data.setErrorCode(object.getString("errorCode"));
+        //datos de bsuqueda
+        String api_token = "95feb5ba-db86-4516-ae24-8fb376d9afb1";
+        String rol = "dsContributor";
+        String assigne = "@"+usuario;
 
-            record.setData(data);
+        // DefaultHttpClient httpClient = new DefaultHttpClient();
+        HttpClient httpClient =  HttpClientBuilder.create().build();
+
+        try{
+            //Define a postRequest request
+            //HttpGet getRequest = new HttpGet("https://api.dti.usach.cl/api/docente/"+run);
+            HttpGet getRequest = new HttpGet("127.0.0.01:8080/api/dataverses/"+idDataverse+"/assignments");
+
+            //Set the API media type in http content-type header
+            getRequest.addHeader("content-type", "application/json");
+            getRequest.addHeader("X-Dataverse-key", api_token);
+
+            //Send the request; It will immediately return the response in HttpResponse object if any
+            HttpResponse response = httpClient.execute(getRequest);
+
+            //verify the valid error code first
+            int statusCode = response.getStatusLine().getStatusCode();
+
+            if (statusCode == 200) {
+                responseAssigment = parseGsonToAssigmentsObject(EntityUtils.toString(response.getEntity()));
+                exite = existeUsuarioEnListaConRol(assigne, rol, responseAssigment.getData());
+            }
+
+        }catch(Exception e){
+            return exite;
+        } finally {
+            //Important: Close the connect
+            httpClient.getConnectionManager().shutdown();
         }
 
-        return record;
+        return exite;
     }
 
+    private Boolean existeUsuarioEnListaConRol(String assignee, String rol, List<AssigmentRecord> data){
+
+        Boolean existe = Boolean.FALSE;
+        for(AssigmentRecord registro : data ){
+            if(rol.equals(registro.get_roleAlias()) && assignee.equals(registro.getAssignee())){
+                existe = Boolean.TRUE;
+            }
+        }
+        return existe;
+    }
 }
