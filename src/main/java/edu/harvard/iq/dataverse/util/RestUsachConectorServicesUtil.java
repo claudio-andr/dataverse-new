@@ -173,7 +173,7 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
         try{
             //Define a postRequest request
             //HttpGet getRequest = new HttpGet("https://api.dti.usach.cl/api/docente/"+run);
-            HttpGet getRequest = new HttpGet("127.0.0.01:8080/api/dataverses/"+idDataverse+"/assignments");
+            HttpGet getRequest = new HttpGet("http://127.0.0.1:8080/api/dataverses/"+idDataverse+"/assignments");
 
             //Set the API media type in http content-type header
             getRequest.addHeader("content-type", "application/json");
@@ -204,7 +204,9 @@ public class RestUsachConectorServicesUtil implements java.io.Serializable  {
 
         Boolean existe = Boolean.FALSE;
         for(AssigmentRecord registro : data ){
-            if(rol.equals(registro.get_roleAlias()) && assignee.equals(registro.getAssignee())){
+            //comenatdo por cambio
+            //if(rol.equals(registro.get_roleAlias()) && assignee.equals(registro.getAssignee())){
+            if(assignee.equals(registro.getAssignee())){
                 existe = Boolean.TRUE;
             }
         }
